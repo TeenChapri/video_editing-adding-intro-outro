@@ -1,0 +1,62 @@
+name: My Workflow
+
+on:
+  workflow_dispatch:
+    inputs: 
+      video_urls:
+        description: 'URL links list => downloadable links as a LIST of URL links'
+        required: true
+      output_fille_name:
+        description: 'output file name must end with .mp4'
+        required: true
+        default: 'output.mp4'
+      intro_video_filename:
+        description: 'Intro video filename => Same Directory'
+        required: false
+        default: 'intro.mp4'
+      outro_video_file_name:
+        description: 'Outro video Filename => Same Directory'
+        required: false
+        default: 'outro.mp4'
+      
+
+jobs:
+  my-job:
+    runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+    #   ENV_VAR_2: ${{ secrets.ORG_SECRET_2 }}
+    # steps:
+    #   - name: Run API request and Download Edit Upload
+    #     uses: some-action@v1
+    #     with:
+    #       version: ${{ github.event.inputs.api_version }}
+    #       parameter_1: ${{ github.event.inputs.parameter_1 }}
+    #       parameter_2: ${{ github.event.inputs.parameter_2 }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+       # with:
+          # Semantic version range syntax or exact version of a Python version
+        #  python-version: '3.10.10'
+          # Optional - x64 or x86 architecture, defaults to x64
+         # architecture: 'x64'
+      # You can test your matrix by printing the current Python version
+      - name: Display Python version
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install --upgrade --user pip==22.2
+          pip3 install -r requirements.txt
+          pip3 install argparse
+          pip3 install requests
+          pip3 install setuptools
+          pip3 install wheel
+          pip3 install moviepy
+          python main.py --urls "${{ github.event.inputs.video_urls }}" --output "${{ github.event.inputs.output_fille_name}}" --gh_token "${{ secrets.GH_TOKEN }}" --tag "v1.0.${{ github.run_number }}" --owner_repo "${{ github.repository }}" --intro "${{ github.event.intro_video_filename }}" --outro "${{ github.event.outro_video_file_name }}"
+      - name: Push to Releases
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ${{ github.event.inputs.output_fille_name}}
+          tag: v1.0.${{ github.run_number }}
+          token: ${{ secrets.GH_TOKEN }}
